@@ -1,0 +1,14 @@
+boto3==1.9.220
+botocore==1.12.220
+certifi==2019.6.16
+docutils==0.15.2
+jmespath==0.9.4
+ply==3.11
+python-dateutil==2.8.0
+pytz==2019.2
+s3transfer==0.2.1
+six==1.12.0
+snowplow-analytics-sdk==0.2.3
+thriftpy2==0.4.5
+tzlocal==2.0.0
+urllib3==1.25.3
