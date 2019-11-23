@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import boto3
 import datetime
 import json
@@ -29,13 +31,14 @@ def serializer(o):
         return o.__str__()
 
 
-def consume_stream(stream, region, enriched, interval, limit, to_json, pretty):
-    print("\n-------------------------------------------------------------------------------")
-    print(f"listening on the '{stream}' stream in the {region} region at {interval} second intervals")
-    print("-------------------------------------------------------------------------------\n")
-    response = kinesis.describe_stream(StreamName=stream)
+def consume_stream(name, region, enriched, interval, limit, to_json, pretty):
+    message = f"listening on the '{name}' stream in the {region} region at {interval} second intervals"
+    print("-" * len(message))
+    print(message)
+    print("-" * len(message))
+    response = kinesis.describe_stream(StreamName=name)
 
-    shard_it = kinesis.get_shard_iterator(StreamName=stream,
+    shard_it = kinesis.get_shard_iterator(StreamName=name,
                                           ShardId=response['StreamDescription']['Shards'][0]['ShardId'],
                                           ShardIteratorType='LATEST')["ShardIterator"]
 
@@ -69,7 +72,7 @@ def consume_stream(stream, region, enriched, interval, limit, to_json, pretty):
 
 def main(args=None):
     parser = argparse.ArgumentParser(description='AWS Kinesis stream listener for Snowplow events.')
-    parser.add_argument('-s', '--stream', type=str, required=True, help='Kinesis stream')
+    parser.add_argument('-n', '--name', type=str, required=True, help='name of Kinesis stream')
 
     parser.add_argument('-r', '--region', type=str, required=True, help='AWS Region')
 
@@ -84,7 +87,7 @@ def main(args=None):
     parser.add_argument('-p', '--pretty', action='store_true', help='Pretty print results')
     results = parser.parse_args(args)
 
-    consume_stream(results.stream, results.region, results.enriched, results.interval, results.limit, results.json,
+    consume_stream(results.name, results.region, results.enriched, results.interval, results.limit, results.json,
                    results.pretty)
 
 
