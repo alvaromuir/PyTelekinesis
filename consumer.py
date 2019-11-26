@@ -90,7 +90,7 @@ def consume_stream(stream_name, region, enriched, limit, interval, max_records, 
 
 def main(args=None):
     parser = argparse.ArgumentParser(description='AWS Kinesis stream listener for Snowplow events.')
-    parser.add_argument('-n', '--name', type=str, required=True, help='name of Kinesis stream')
+    parser.add_argument('-s', '--stream-name', type=str, required=True, help='name of Kinesis stream')
 
     parser.add_argument('-r', '--region', type=str, required=True, help='AWS Region')
 
