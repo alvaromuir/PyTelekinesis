@@ -18,7 +18,7 @@ import snowplow_analytics_sdk.event_transformer
 import snowplow_analytics_sdk.snowplow_event_transformation_exception
 
 
-kinesis = boto3.client('kinesis')
+client = boto3.client('kinesis')
 # accessKeyId = your_key_here_if_not_in_env_vars
 # secretAccessKey = your_secret_here_if_not_in_env_vars
 
@@ -31,40 +31,58 @@ def serializer(o):
         return o.__str__()
 
 
-def consume_stream(name, region, enriched, interval, limit, to_json, pretty):
-    message = f"listening on the '{name}' stream in the {region} region at {interval} second intervals"
+def print_banner(stream_name, region, interval):
+    message = f"listening on the '{stream_name}' stream in the {region} region at {interval} second intervals"
     print("-" * len(message))
     print(message)
     print("-" * len(message))
-    response = kinesis.describe_stream(StreamName=name)
 
-    shard_it = kinesis.get_shard_iterator(StreamName=name,
-                                          ShardId=response['StreamDescription']['Shards'][0]['ShardId'],
-                                          ShardIteratorType='LATEST')["ShardIterator"]
 
-    out = kinesis.get_records(ShardIterator=shard_it, Limit=2)
+def consume_stream(stream_name, region, enriched, limit, interval, max_records, pretty):
+    if limit < 2:
+        limit = 2
+
+    if interval < .5:
+        interval = .5
+
+    print_banner(stream_name, region, interval)
+
+    response = client.describe_stream(StreamName=stream_name)
+
+    shard_it = client.get_shard_iterator(StreamName=stream_name,
+                                         ShardId=response['StreamDescription']['Shards'][0]['ShardId'],
+                                         ShardIteratorType='LATEST')["ShardIterator"]
+
+    output = client.get_records(ShardIterator=shard_it, Limit=2)
 
     count = 0
-    while 'NextShardIterator' in out:
-        out = kinesis.get_records(ShardIterator=out['NextShardIterator'], Limit=2)
-        records = out.get('Records')
+    while 'NextShardIterator' in output:
+        output = client.get_records(ShardIterator=output['NextShardIterator'], Limit=limit)
+        records = output.get('Records')
         if records:
             for record in records:
-                if count > limit:
+                if count > max_records:
                     sys.exit(0)
                 else:
+                    payload = None
                     if enriched:
-                        payload = snowplow_analytics_sdk.event_transformer.transform(record.get('Data').decode("utf-8"))
+                        try:
+                            payload = snowplow_analytics_sdk.event_transformer.transform(record.get('Data').decode("utf-8"))
+                        except():
+                            print("An exception occurred when converting an enriched event.")
                     else:
-                        payload = vars(deserialize(collector_payload, record.get('Data'), TCyBinaryProtocolFactory()))
-                        payload['body'] = parse.parse_qs(payload.get('body'))
+                        try:
+                            payload = vars(deserialize(collector_payload, record.get('Data'), TCyBinaryProtocolFactory()))
+                            payload['body'] = parse.parse_qs(payload.get('body'))
+                        except():
+                            print("An exception occurred when converting an enriched event.")
 
                     record['Data'] = payload
 
-                    record = json.dumps(record, default=serializer, ensure_ascii=False) if to_json else record
-                    pprint(record) if pretty else print(record)
+                    result = json.dumps(record, default=serializer, ensure_ascii=False)
+                    pprint(result) if pretty else print(result)
 
-                    if limit > 0:
+                    if max_records > 0:
                         count += 1
 
         time.sleep(interval)
@@ -78,16 +96,16 @@ def main(args=None):
 
     parser.add_argument('-e', '--enriched', action='store_true', help='Results are enriched')
 
+    parser.add_argument('-l', '--limit', type=int, default=25, help='Records per shard limit; default 25, minimum is 2')
+
     parser.add_argument('-i', '--interval', type=float, default=1.0, help='Response intervals; default 1 second')
 
-    parser.add_argument('-l', '--limit', type=int, default=0, help='Maximum records to return; default 0 (infinite)')
-
-    parser.add_argument('-j', '--json', action='store_true', help='JSON output')
+    parser.add_argument('-m', '--max', type=int, default=0, help='Maximum records to return; default 0 (infinite)')
 
     parser.add_argument('-p', '--pretty', action='store_true', help='Pretty print results')
     results = parser.parse_args(args)
 
-    consume_stream(results.name, results.region, results.enriched, results.interval, results.limit, results.json,
+    consume_stream(results.name, results.region, results.enriched, results.limit, results.interval,  results.max,
                    results.pretty)
 
 

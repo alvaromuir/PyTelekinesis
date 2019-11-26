@@ -7,23 +7,23 @@ Built in Python 3.7.x
 run `$ python ./consumer`
 
 ```bash
-usage: consumer.py [-h] -s STREAM -r REGION [-e] [-i INTERVAL] [-l LIMIT] [-j]
-                   [-p]
+$ python consumer.py -h                                                                                         master ✱
+usage: consumer.py [-h] -n NAME -r REGION [-e] [-l LIMIT] [-i INTERVAL]
+                   [-m MAX] [-p]
 
 AWS Kinesis stream listener for Snowplow events.
 
 optional arguments:
   -h, --help            show this help message and exit
-  -s STREAM, --stream STREAM
-                        Kinesis stream
+  -n NAME, --name NAME  name of Kinesis stream
   -r REGION, --region REGION
                         AWS Region
   -e, --enriched        Results are enriched
+  -l LIMIT, --limit LIMIT
+                        Records per shard limit; default 25, minimum is 2
   -i INTERVAL, --interval INTERVAL
                         Response intervals; default 1 second
-  -l LIMIT, --limit LIMIT
-                        Maximum records to return; default 0 (infinite)
-  -j, --json            JSON output
+  -m MAX, --max MAX     Maximum records to return; default 0 (infinite)
   -p, --pretty          Pretty print results
 ```
 
