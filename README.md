@@ -1,6 +1,6 @@
-# Telekinesis
+# PyTelekinesis
 
-Telekinesis is a simple AWS Lambda streaming app focused on [snowplow](https://github.com/snowplow/snowplow) formatted events.
+PyTelekinesis is a simple AWS Lambda streaming app focused on [snowplow](https://github.com/snowplow/snowplow) formatted events.
 
 Built in Python 3.7.x
 

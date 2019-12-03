@@ -6,7 +6,7 @@ import random
 import time
 
 kinesis = boto3.client('kinesis')
-productionStream = "telekinesis"
+productionStream = "PyTelekinesis"
 
 
 def push(_id, _value, _timestamp):
