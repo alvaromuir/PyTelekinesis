@@ -4,6 +4,7 @@ import time
 
 from random import random
 
+import boto3
 
 awsRegion = "us-east-2"
 # accessKeyId = ""  # Your AWS Access Key ID
